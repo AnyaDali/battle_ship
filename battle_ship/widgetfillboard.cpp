@@ -5,8 +5,7 @@
 widgetFillBoard::widgetFillBoard(QWidget *parent) :
     QWidget(parent), myLayout(std::make_shared<QGridLayout>()),
     tableShip(std::make_shared<table_t>(10, QVector<std::pair<QPushButton*, bool>>(10))),
-    countShip(0), numberOfHits(0), statusBar(std::make_shared<QStatusBar>())//,
-    //wInputBoard(std::make_shared<QVector<QVector<std::pair<QPushButton*, bool>>>>(tableShip))
+    countShip(0), numberOfHits(0), statusBar(std::make_shared<QStatusBar>())
 {
     resize(430, 500);
     QLabel* label = new QLabel[10];
@@ -80,7 +79,7 @@ QPushButton* widgetFillBoard::createButton(size_t i, size_t j) {
 
 void widgetFillBoard::slotButtonAccept() {
     if (countShip == 10) {
-        widgetInputBoard* w = new widgetInputBoard{getTableShip()};
+        widgetInputBoard* w = new widgetInputBoard{tableShip};
         w->show();
 
         this->close();
@@ -90,14 +89,6 @@ void widgetFillBoard::slotButtonAccept() {
 }
 
 void widgetFillBoard::slotButtonClicked() {
-    if (countShip >= 10) {
-        for(auto& line : *tableShip) {
-            for(auto& [ptrB, flag] : line) {
-                ptrB->setEnabled(false);
-            }
-        }
-        return;
-    }
 
     auto ptrButton = reinterpret_cast<QPushButton*>(sender());
     for(auto& line : *tableShip) {
@@ -109,6 +100,14 @@ void widgetFillBoard::slotButtonClicked() {
     }
     ptrButton->setStyleSheet("background-color:"+lstColor[GRAY].name());
     ++countShip;
+    if (countShip >= 10) {
+        for(auto& line : *tableShip) {
+            for(auto& [ptrB, flag] : line) {
+                ptrB->setEnabled(false);
+            }
+        }
+    }
+
     if (countShip < 10) {
         statusBar->showMessage("Кораблей осталось разместить: " + QString::number(10 - countShip));
     } else {
