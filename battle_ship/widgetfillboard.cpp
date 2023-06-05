@@ -1,10 +1,12 @@
 
 #include "widgetfillboard.h"
+#include "widgetinputboard.h"
 
 widgetFillBoard::widgetFillBoard(QWidget *parent) :
     QWidget(parent), myLayout(std::make_shared<QGridLayout>()),
-    tableShip(10, QVector<std::pair<QPushButton*, bool>>(10)),
-    countShip(0), numberOfHits(0), statusBar(std::make_shared<QStatusBar>())
+    tableShip(std::make_shared<table_t>(10, QVector<std::pair<QPushButton*, bool>>(10))),
+    countShip(0), numberOfHits(0), statusBar(std::make_shared<QStatusBar>())//,
+    //wInputBoard(std::make_shared<QVector<QVector<std::pair<QPushButton*, bool>>>>(tableShip))
 {
     resize(430, 500);
     QLabel* label = new QLabel[10];
@@ -25,7 +27,7 @@ widgetFillBoard::widgetFillBoard(QWidget *parent) :
     connect(butAccept, SIGNAL(clicked()), this, SLOT(slotButtonAccept()));
     myLayout->addWidget(butAccept, 0, 7, 0, 10, Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignTop);
     //statusBar->messageChanged("Осталось расставить кораблей: 10");
-    statusBar->setStyleSheet("QStatusBar { background-color: gray; border: 1px solid #000; }");
+    statusBar->setStyleSheet("QStatusBar { background-color: white; border: 1px solid #000; }");
     statusBar->showMessage("Разместите 10 кораблей на поле.");
     myLayout->addWidget(statusBar.get(), 1, 0, 1, 10, Qt::AlignmentFlag::AlignTop);
 
@@ -72,13 +74,16 @@ QPushButton* widgetFillBoard::createButton(size_t i, size_t j) {
     QPushButton* pcmd = new QPushButton{""};
     pcmd->setMinimumSize(30, 30);
     connect(pcmd, SIGNAL(clicked()), this, SLOT(slotButtonClicked()));
-    tableShip[i][j] = std::make_pair(pcmd, false);
+    (*tableShip)[i][j] = std::make_pair(pcmd, false);
     return pcmd;
 }
 
 void widgetFillBoard::slotButtonAccept() {
     if (countShip == 10) {
+        widgetInputBoard* w = new widgetInputBoard{getTableShip()};
+        w->show();
 
+        this->close();
     } else {
         statusBar->showMessage("Вам необходимо расставить ещё " + QString::number(10 - countShip) + " кораблей.");
     }
@@ -86,11 +91,16 @@ void widgetFillBoard::slotButtonAccept() {
 
 void widgetFillBoard::slotButtonClicked() {
     if (countShip >= 10) {
-        return; // уже выставлены все корабли
+        for(auto& line : *tableShip) {
+            for(auto& [ptrB, flag] : line) {
+                ptrB->setEnabled(false);
+            }
+        }
+        return;
     }
 
     auto ptrButton = reinterpret_cast<QPushButton*>(sender());
-    for(auto& line : tableShip) {
+    for(auto& line : *tableShip) {
         for(auto& [ptr, flag] : line) {
             if (ptr == ptrButton) {
                 flag = true;
@@ -107,14 +117,9 @@ void widgetFillBoard::slotButtonClicked() {
     ptrButton->setEnabled(false);
 }
 
-void widgetFillBoard::choose(size_t i, size_t j) {
-    auto& [ptrButton, isShip] = tableShip[i][j];
-    if (isShip) {
-        ++numberOfHits;
-        ptrButton->setStyleSheet("background-color:"+lstColor[RED].name());
-    } else {
-        ptrButton->setStyleSheet("background-color:"+lstColor[YELLOW].name());
-    }
+std::shared_ptr<QVector<QVector<std::pair<QPushButton*, bool>>>> widgetFillBoard::getTableShip() noexcept {
+    auto ptrRet = tableShip;
+    return ptrRet;
 }
 
 size_t widgetFillBoard::getNumberOfHints() const noexcept {

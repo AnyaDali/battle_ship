@@ -15,6 +15,7 @@ widgetInputBoard::widgetInputBoard(ptr_table_t table, QWidget *parent)
         }
         y += 1;
     }
+    
 
     y = 14;
     for(size_t j = 0; j < 10; ++j) {
